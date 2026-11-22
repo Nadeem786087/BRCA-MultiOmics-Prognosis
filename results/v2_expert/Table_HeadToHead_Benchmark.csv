@@ -1,0 +1,15 @@
+Model,Cohort,C_Index,CI_95,Mean_AUC
+OncotypeDX-Panel (15 genes),TCGA-Test,0.5538,0.4179-0.6858,0.5814
+OncotypeDX-Panel (15 genes),METABRIC,0.5733,0.5558-0.5905,0.555
+OncotypeDX-Panel (15 genes),GSE20685,0.5939,0.5289-0.6509,0.6113
+PAM50-Panel (48 genes),TCGA-Test,0.5715,0.4416-0.6978,0.5885
+PAM50-Panel (48 genes),METABRIC,0.5173,0.4985-0.5360,0.5067
+PAM50-Panel (48 genes),GSE20685,0.603,0.5340-0.6631,0.6464
+Clinical-Only (Age+Stage),TCGA-Test,0.6965,0.5647-0.8070,0.703
+Clinical-Only (Age+Stage),METABRIC,0.6372,0.6203-0.6549,0.5716
+3-Omics-Signature (CNA+SNV+mRNA),TCGA-Full-5Fold-OOF (n=994),0.6771,0.6209-0.7388,0.677
+3-Omics-Signature (CNA+SNV+mRNA),TCGA-Test,0.5142,0.3843-0.6541,0.5139
+3-Omics-Signature (CNA+SNV+mRNA),METABRIC,0.5824,0.5656-0.5994,0.593
+Clinico-3Omics-Fusion,TCGA-Full-5Fold-OOF (n=994),0.7185,0.6676-0.7715,0.726
+Clinico-3Omics-Fusion,TCGA-Test,0.5839,0.4620-0.7207,0.5984
+Clinico-3Omics-Fusion,METABRIC,0.6202,0.6041-0.6374,0.6161

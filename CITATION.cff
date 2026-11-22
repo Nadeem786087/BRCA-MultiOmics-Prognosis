@@ -1,0 +1,19 @@
+﻿cff-version: 1.2.0
+message: "If you use this software or multi-omics survival benchmark, please cite it as below."
+title: "BRCA-MultiOmics-Prognosis: TRIPOD+AI Compliant Multi-Omics Survival Modeling Across 3,186 Breast Cancer Patients"
+authors:
+  - family-names: "Nadeem"
+    given-names: "Muhammad"
+    orcid: "https://orcid.org/0009-0003-3193-3882"
+    affiliation: "Department of Bioinformatics and Biotechnology, Government College University Faisalabad, Faisalabad, Pakistan"
+    email: "muhmmad.nadeem.bioinfo@gmail.com"
+repository-code: "https://github.com/Nadeem786087/BRCA-MultiOmics-Prognosis"
+version: "1.0.0"
+date-released: "2026-11-22"
+license: "MIT"
+keywords:
+  - "breast cancer"
+  - "multi-omics"
+  - "survival analysis"
+  - "TRIPOD+AI"
+  - "computational oncology"

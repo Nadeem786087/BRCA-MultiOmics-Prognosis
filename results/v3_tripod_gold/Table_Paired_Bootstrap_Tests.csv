@@ -1,0 +1,4 @@
+Comparison,Delta_C_Index,CI_95,Paired_Bootstrap_P
+3-Omics vs. Re-Trained Oncotype DX (METABRIC OS),0.0091,-0.0117 to 0.0294,0.436
+Clinico-3Omics vs. Re-Trained Oncotype DX (METABRIC OS),0.0584,0.0374 to 0.0794,0.0
+Clinico-3Omics vs. Clinical-Only (METABRIC DSS),0.0408,0.0173 to 0.0626,0.0

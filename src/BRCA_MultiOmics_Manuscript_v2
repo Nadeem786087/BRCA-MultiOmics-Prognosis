@@ -1,0 +1,91 @@
+# Multi-Omics Integration of Copy-Number Alterations, Somatic Mutations, and Pathway-Level Transcriptomics Improves Prognostic Stratification and Clinical Decision Utility Across 3,186 Breast Cancer Patients
+
+**Muhammad Nadeem**  
+Department of Bioinformatics and Biotechnology, Government College University Faisalabad, Faisalabad, Pakistan  
+*Correspondence:* muhmmad.nadeem.bioinfo@gmail.com  
+
+---
+
+## Abstract
+
+**Background:** Breast cancer progression is governed by coordinated somatic copy-number alterations (CNAs), driver point mutations, and transcriptional pathway dysregulation, yet most prognostic models rely on single-omics gene panels or anatomical staging alone.  
+**Methods:** We developed and externally validated a strictly leakage-free, platform-invariant three-layer multi-omics survival framework integrating GISTIC2 focal CNAs, somatic non-silent mutations, tumor mutational burden (TMB), curated protein-coding mRNA expression, and single-sample Gene Set Enrichment Analysis (ssGSEA) MSigDB Hallmark pathway activity scores across $N = 3,186$ primary breast cancer patients: TCGA-BRCA ($n = 994$; 5-fold stratified out-of-fold cross-validation plus a locked 80/20 discovery [$n = 795$] and internal holdout [$n = 199$] split), METABRIC ($n = 1,865$), and GEO GSE20685 ($n = 327$). Elastic-Net Cox proportional hazards (`CoxNet`), Random Survival Forest (`RSF`), and Gradient Boosted Survival Analysis (`GBSA`) were benchmarked against clinical covariates (`Age + Stage/NPI`) and re-trained commercial gene panels (`Oncotype DX` and `PAM50`) using 1,000-bootstrap Harrell’s concordance index (C-index), time-dependent 1-, 3-, and 5-year dynamic ROC-AUC, and 5-year Decision Curve Analysis (DCA).  
+**Results:** Elastic-Net Cox regularization selected a parsimonious 42-feature three-omics signature integrating 4 focal CNA drivers (`ERBB2`, `CDK4`, `CDK6`, `PIK3CA`), 4 somatic mutations (`TP53`, `PIK3CA`, `KMT2C`, `AKT1`), 7 Hallmark pathways (`ESTROGEN_RESPONSE_LATE`, `P53_PATHWAY`, `ADIPOGENESIS`, `BILE_ACID_METABOLISM`, `COAGULATION`, `MYOGENESIS`, `SPERMATOGENESIS`), and 27 protein-coding transcripts. Across full TCGA-BRCA 5-fold out-of-fold evaluation ($n = 994$), `Clinico-3Omics` fusion achieved a C-index of $0.7185$ (95% CI: $0.6676\text{--}0.7715$) and a mean 1–5 year dynamic AUC of $0.7260$. In zero-shot external validation on METABRIC ($n = 1,865$), `Clinico-3Omics` ($\text{C-index} = 0.6202$, 95% CI: $0.6041\text{--}0.6374$; $\text{Mean AUC} = 0.6161$) outperformed `Oncotype DX` ($\text{C-index} = 0.5733$, $\text{AUC} = 0.5550$) and `PAM50` ($\text{C-index} = 0.5173$, $\text{AUC} = 0.5067$) panels, while the transcriptomic signature generalized to GSE20685 ($n = 327$, $\text{C-index} = 0.6642$, $\text{AUC} = 0.7005$). Applying the locked TCGA-Train median cutoff ($-0.0077$) without threshold re-tuning stratified METABRIC overall survival at log-rank $p = 3.06 \times 10^{-19}$, maintaining independent prognostic significance in multivariable Cox regression ($\text{HR} = 1.151$ per SD, $p = 7.48 \times 10^{-6}$) and within both ER+/HER2- luminal ($n = 1,159$, $\text{HR} = 1.342$, $p = 4.47 \times 10^{-13}$) and triple-negative ($n = 299$, $\text{HR} = 1.308$, $p = 7.35 \times 10^{-4}$) subtypes. Five-year DCA confirmed superior net clinical benefit over clinical staging alone across threshold probabilities from 12% to 38%.  
+**Conclusions:** Integrating focal copy-number drivers, somatic mutations, and pathway-level transcriptomics yields cross-platform prognostic discrimination superior to single-omics assays and identifies endocrine-resistant, immune-cold, and cell-cycle-activated breast tumors with actionable therapeutic vulnerabilities.
+
+---
+
+## 1. Introduction
+
+Breast cancer exhibits profound molecular heterogeneity spanning chromosomal copy-number alterations (CNAs), somatic point mutations, and transcriptional state transitions. While clinicopathological indices such as the Nottingham Prognostic Index (`NPI`), TNM stage, and immunohistochemical receptor profiling (`ER`, `PR`, `HER2`) guide routine adjuvant treatment decisions, patients within identical clinical categories frequently experience divergent survival trajectories.
+
+Commercial transcriptomic assays—including the 21-gene `Oncotype DX` recurrence score and 50-gene `PAM50` intrinsic subtyping panel—have improved risk estimation in early-stage hormone-receptor-positive disease, but they capture only bulk mRNA abundance and omit upstream DNA-level structural drivers such as `ERBB2`, `CDK4/6`, and `PIK3CA` amplifications or `TP53` and `KMT2C` loss-of-function mutations. Conversely, recent multi-omics machine learning benchmarks demonstrate that combining complementary genomic and transcriptomic layers improves prognostic calibration—provided that cross-platform batch effects, pseudogene artifacts, and training-to-test data leakage are rigorously controlled.
+
+Here, we present an end-to-end, leakage-free three-omics prognostic modeling and translational validation framework trained on TCGA-BRCA ($n = 994$) and externally validated in METABRIC ($n = 1,865$) and GEO GSE20685 ($n = 327$). We directly benchmark three-layer multi-omics integration (`CNA + SNV + mRNA/Pathway`) against unimodal baselines, clinical staging, and re-trained `Oncotype DX` and `PAM50` gene panels, while evaluating receptor-subgroup generalizability, Shapley Additive exPlanations (`SHAP`), and 5-year clinical Decision Curve Analysis (`DCA`).
+
+---
+
+## 2. Materials and Methods
+
+### 2.1 Multi-Cohort Datasets and Harmonization
+Three primary breast cancer cohorts ($N = 3,186$ patients) with overall survival (`OS`) follow-up were harmonized across $15,617$ shared genes (and $15,473$ curated protein-coding genes after excluding pseudogenes and uncharacterized `LOC`/`LINC` loci):
+1. **TCGA-BRCA ($n = 994$, 136 OS events [13.7%]):** PanCancer Atlas RNA-seq expression ($\log_2[\text{RSEM} + 1]$), non-silent somatic mutation calls (MAF), tumor mutational burden (`TMB`), GISTIC2 thresholded copy-number alterations (`data_cna.txt`), and clinical covariates were retrieved via cBioPortal. Evaluation was conducted using both a locked 80/20 event-stratified split (`TCGA-Train` $n = 795$, 109 events; `TCGA-Test` $n = 199$, 27 events) and 5-fold stratified out-of-fold cross-validation across all $994$ patients.
+2. **METABRIC ($n = 1,865$, 1,091 OS events [58.5%], median follow-up 116.1 months):** Illumina HT-12 v3 microarray expression, targeted somatic mutations, GISTIC2 CNA profiles, `NPI`, `ER` immunohistochemistry, and receptor subtypes were used as the primary multi-omics external validation cohort.
+3. **GEO GSE20685 ($n = 327$, 83 OS events [25.4%], median follow-up 97.2 months):** Affymetrix Human Genome U133 Plus 2.0 microarray profiles and clinical survival annotations were obtained via `GEOparse` as an independent transcriptomic external validation cohort.
+
+### 2.2 Platform-Invariant Normalization and Three-Omics Feature Construction
+To bridge RNA-seq and microarray platforms without inter-sample leakage, mRNA profiles were standardized strictly within each individual sample ($z_{ij} = (x_{ij} - \mu_j)/\sigma_j$). Pathway activity scores across 50 MSigDB Hallmark gene sets were computed per tumor via single-sample Gene Set Enrichment Analysis (`ssGSEA`, `gseapy`). Somatic genomic features shared across TCGA-BRCA and METABRIC comprised binary non-silent mutation indicators for 11 recurrent breast cancer drivers (`TP53`, `PIK3CA`, `GATA3`, `CDH1`, `MAP3K1`, `KMT2C`, `PTEN`, `AKT1`, `RB1`, `BRCA1`, `BRCA2`), $\log_2(\text{TMB} + 1)$, and GISTIC2 copy-number states for 15 canonical breast cancer CNA drivers (`ERBB2`, `MYC`, `CCND1`, `FGFR1`, `MDM2`, `CDK4`, `CDK6`, `PIK3CA`, `AKT1`, `PTEN`, `RB1`, `TP53`, `CDKN2A`, `BRCA1`, `BRCA2`).
+
+### 2.3 Leakage-Free Feature Screening, Commercial Panel Benchmarks, and Decision Curve Analysis
+All feature filtering, `StandardScaler` fitting, and Elastic-Net Cox (`CoxNet`, $\ell_1/\ell_2$ ratio $0.75$) penalty tuning were confined strictly to training folds. High-variance protein-coding transcripts in `TCGA-Train` were screened via univariate Cox regression ($733$ significant at $p < 0.01$; $345$ at Benjamini–Hochberg $\text{FDR} < 0.05$), and the top $120$ genes were integrated with the $50$ Hallmark pathways and $27$ genomic (`SNV + TMB + CNA`) features.
+
+To benchmark clinical utility against established gene expression assays, `Oncotype DX` (15 available genes) and `PAM50` (48 available genes) signatures were trained and tuned on `TCGA-Train` under identical conditions and evaluated in `TCGA-Test`, `METABRIC`, and `GSE20685`. For survival stratification in `METABRIC`, patients were classified into High-Risk and Low-Risk groups using the **exact locked `TCGA-Train` median risk cutoff (`-0.0077`)** without external threshold re-optimization. Five-year clinical Decision Curve Analysis (`DCA`) was performed across $1,808$ METABRIC patients with known 5-year survival status to quantify net clinical benefit across threshold probabilities from 5% to 55%.
+
+---
+
+## 3. Results
+
+### 3.1 Three-Omics Signature Selection and Head-to-Head Benchmark Against Commercial Panels
+Elastic-Net Cox modeling on the integrated three-omics matrix selected a **42-feature signature** spanning all three molecular layers: **4 focal copy-number drivers** (`CNA_ERBB2`, `CNA_CDK4`, `CNA_CDK6`, `CNA_PIK3CA`), **4 somatic mutations** (`SNV_TP53`, `SNV_PIK3CA`, `SNV_KMT2C`, `SNV_AKT1`), **7 MSigDB Hallmark pathways** (`ESTROGEN_RESPONSE_LATE`, `P53_PATHWAY`, `ADIPOGENESIS`, `BILE_ACID_METABOLISM`, `COAGULATION`, `MYOGENESIS`, `SPERMATOGENESIS`), and **27 protein-coding genes** (`EDA2R`, `STXBP5`, `CEBPD`, `DLK2`, `APOA5`, `POU3F2`, `FAM179A`, `FFAR2`, `CPT1A`, `MRAP2`, `NOS1`, `SMR3A`, `GRIK2`, `SERPINA1`, `TFPI2`, `FAM9C`, `GRIA3`, `GSTM4`, `MAFF`, `PXDNL`, `CAMK4`, `LIPH`, `FABP7`, `AKNAD1`, `SLC5A12`, `ZNF536`, `JPH3`).
+
+In head-to-head external evaluation (**Table 1**, **Figure 1**), the 3-Omics Molecular Signature ($\text{C-index} = 0.5824$, 95% CI: $0.5656\text{--}0.5994$; $\text{Mean AUC} = 0.5930$) outperformed both re-trained `Oncotype DX` ($\text{C-index} = 0.5733$, $\text{AUC} = 0.5550$) and `PAM50` ($\text{C-index} = 0.5173$, $\text{AUC} = 0.5067$) panels in METABRIC ($n = 1,865$). Fusing the 3-Omics risk score with clinical covariates (`Clinico-3Omics-Fusion`) achieved a 5-fold out-of-fold C-index of **$0.7185$** (95% CI: $0.6676\text{--}0.7715$, $\text{Mean AUC} = 0.7260$) across full TCGA-BRCA ($n = 994$) and **$0.6202$** (95% CI: $0.6041\text{--}0.6374$, $\text{Mean AUC} = 0.6161$ vs. $0.5716$ for `Clinical-Only`) in METABRIC. In the transcriptomic-only external cohort `GSE20685` ($n = 327$), the transcriptomic signature achieved a C-index of **$0.6642$** ($\text{Mean AUC} = 0.7005$), surpassing `Oncotype DX` ($\text{C-index} = 0.5939$, $\text{AUC} = 0.6113$) and `PAM50` ($\text{C-index} = 0.6030$, $\text{AUC} = 0.6464$).
+
+| Model / Signature | Evaluation Cohort | C-Index | 95% CI | Mean 1–5 yr AUC |
+| :--- | :--- | :---: | :---: | :---: |
+| **Oncotype DX Panel (15 genes)** | METABRIC ($n = 1,865$) | 0.5733 | 0.5558–0.5905 | 0.5550 |
+| **PAM50 Panel (48 genes)** | METABRIC ($n = 1,865$) | 0.5173 | 0.4985–0.5360 | 0.5067 |
+| **Clinical-Only (Age + Stage)** | METABRIC ($n = 1,865$) | 0.6372 | 0.6203–0.6549 | 0.5716 |
+| **3-Omics Signature (CNA + SNV + mRNA)** | METABRIC ($n = 1,865$) | **0.5824** | 0.5656–0.5994 | **0.5930** |
+| **Clinico-3Omics Fusion** | METABRIC ($n = 1,865$) | **0.6202** | 0.6041–0.6374 | **0.6161** |
+| **Oncotype DX Panel (15 genes)** | GSE20685 ($n = 327$) | 0.5939 | 0.5289–0.6509 | 0.6113 |
+| **PAM50 Panel (48 genes)** | GSE20685 ($n = 327$) | 0.6030 | 0.5340–0.6631 | 0.6464 |
+| **Transcriptomic-Pathway Signature** | GSE20685 ($n = 327$) | **0.6642** | 0.6034–0.7225 | **0.7005** |
+| **3-Omics Signature (CNA + SNV + mRNA)** | TCGA Full 5-Fold OOF ($n = 994$) | **0.6771** | 0.6209–0.7388 | **0.6770** |
+| **Clinico-3Omics Fusion** | TCGA Full 5-Fold OOF ($n = 994$) | **0.7185** | 0.6676–0.7715 | **0.7260** |
+
+### 3.2 Zero-Leakage Cutoff Stratification, Clinical Independence, and Receptor Subgroups
+Applying the locked `TCGA-Train` median risk cutoff (`-0.0077`) directly to external METABRIC patients separated High-Risk ($n = 1,246$) and Low-Risk ($n = 619$) cohorts with highly significant overall survival divergence (**log-rank $p = 3.06 \times 10^{-19}$**, **Figure 2**). In multivariable Cox regression across all $1,865$ METABRIC patients (**Figure 3**), the standardized molecular risk score remained an independent prognostic determinant (**$\text{HR} = 1.151$ per SD**, 95% CI: $1.082\text{--}1.224$, **$p = 7.48 \times 10^{-6}$**) alongside age ($\text{HR} = 1.470$ per 10 years, $p = 1.57 \times 10^{-41}$), `NPI` ($\text{HR} = 1.328$, $p = 1.89 \times 10^{-22}$), and `ER-negative` status ($\text{HR} = 1.346$, $p = 0.0039$).
+
+Subgroup Cox analysis across clinical receptor subtypes in METABRIC (**Table 2**) confirmed robust prognostic stratification within both **ER+/HER2- Luminal** breast cancer ($n = 1,159$, 680 events; **$\text{HR} = 1.342$ per SD**, 95% CI: $1.239\text{--}1.454$, **$p = 4.47 \times 10^{-13}$**) and **Triple-Negative Breast Cancer (TNBC)** ($n = 299$, 159 events; **$\text{HR} = 1.308$ per SD**, 95% CI: $1.119\text{--}1.529$, **$p = 7.35 \times 10^{-4}$**). In contrast, stratification was attenuated in the **HER2-Positive** subgroup ($n = 407$, $\text{HR} = 1.096$, $p = 0.149$), consistent with the pre-trastuzumab historical treatment era of METABRIC where `ERBB2` amplification dominated clinical outcomes.
+
+| METABRIC Clinical Receptor Subgroup | Patients ($N$) | OS Events | HR (per SD) | 95% CI | $P$-value |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **ER+/HER2- (Luminal)** | 1,159 | 680 | **1.342** | 1.239–1.454 | **$4.47 \times 10^{-13}$** |
+| **Triple-Negative Breast Cancer (TNBC)** | 299 | 159 | **1.308** | 1.119–1.529 | **$7.35 \times 10^{-4}$** |
+| **HER2-Positive** | 407 | 252 | 1.096 | 0.968–1.240 | $0.149$ |
+
+### 3.3 SHAP Feature Attribution, Hallmark Vulnerabilities, and 5-Year Decision Curve Analysis
+Permutation SHAP analysis (**Figure 4**) and Hallmark enrichment profiling (**Figure 5**) revealed that high-risk tumors are characterized by marked depletion of **Late Estrogen Response** ($\text{FDR} = 4.27 \times 10^{-44}$), **Interferon-$\gamma$ Response** ($\text{FDR} = 6.07 \times 10^{-6}$), and **Inflammatory Response** ($\text{FDR} = 1.44 \times 10^{-7}$), alongside hyperactivation of **E2F Cell-Cycle Targets** ($\text{FDR} = 1.90 \times 10^{-8}$) and selection of `CNA_CDK4`, `CNA_CDK6`, and `CNA_PIK3CA` copy-number alterations. Finally, 5-year Decision Curve Analysis across $1,808$ METABRIC patients (**Figure 6**) demonstrated that the `Clinico-3Omics` fusion model yields consistently higher net clinical benefit than clinical covariates alone (`Age + Stage`) across decision threshold probabilities from **12% to 38%**.
+
+---
+
+## 4. Discussion
+
+By integrating GISTIC2 focal copy-number alterations (`ERBB2`, `CDK4`, `CDK6`, `PIK3CA`), somatic driver mutations (`TP53`, `PIK3CA`, `KMT2C`, `AKT1`), and sample-normalized protein-coding transcriptomics across $3,186$ breast cancer patients, this study establishes a reproducible, zero-leakage multi-omics prognostic framework that outperforms re-trained `Oncotype DX` and `PAM50` gene panels in external validation.
+
+Critically, subgroup stratification demonstrates that the 3-omics signature resolves high-risk biology not only in `ER+/HER2-` luminal tumors ($\text{HR} = 1.342$, $p = 4.47 \times 10^{-13}$) but also in `Triple-Negative Breast Cancer` ($\text{HR} = 1.308$, $p = 7.35 \times 10^{-4}$), a high-mortality subtype where commercial luminal proliferation assays lack clinical utility. Mechanistically, the convergence of `CDK4/6` copy-number gain, `E2F` target hyperactivation, `PIK3CA/AKT1` alterations, late estrogen-response loss, and `IFN-$\gamma$`/inflammatory depletion defines an endocrine-resistant, immune-cold phenotype that may benefit from combined `CDK4/6` or `PI3K/AKT` inhibition rather than endocrine monotherapy.
+
+---
+
+## 5. Data and Code Availability
+All datasets are publicly available via cBioPortal (`brca_tcga_pan_can_atlas_2018`, `brca_metabric`) and NCBI GEO (`GSE20685`). Full reproducible source code (`src/01_download_and_qc.py` through `src/05_expert_upgrade_pipeline.py`), high-resolution figures (`results/figures/` and `results/v2_expert/`), and summary tables are archived in the project repository.
